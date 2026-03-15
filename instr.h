@@ -205,7 +205,7 @@ struct base_rvholder
     template<class T>
     operator T () const
     {
-        return *reinterpret_cast<const T*>(get());
+        __pragma(warning(suppress:26471)) return *reinterpret_cast<const T*>(get());
     }
 
     template<class T>
@@ -229,7 +229,7 @@ class rvholder : public base_rvholder
 public:
     rvholder(T t, T c) :base_rvholder(), v(t), check(c) {}
     ~rvholder() = default;
-    virtual const void* get() const override {return reinterpret_cast<const void*>(&v);}
+    virtual const void* get() const override {__pragma(warning(suppress:26474)) return reinterpret_cast<const void*>(&v);}
 private:
     T v;
     T check;
@@ -291,7 +291,7 @@ struct any_functor final : public any_functor_base
 
     virtual void run(void* retv) const override
     {
-        auto r = runner();
+        const auto r = runner();
         *reinterpret_cast<decltype(r)*>(retv) = r;
     }
 
@@ -328,11 +328,11 @@ public:
     }
 
     template<class T>
-    repeat_wrapper& set_body(T lambda) { body.reset(new next_step_functor<T>(lambda)); return *this; }
+    repeat_wrapper& set_body(T lambda) { body.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda)); return *this; }
 
 
     template<class T>
-    repeat_wrapper& set_condition(T lambda) { condition.reset(new bool_functor<T>(lambda)); return *this; }
+    repeat_wrapper& set_condition(T lambda) { condition.reset(__pragma(warning(suppress:26409)) new bool_functor<T>(lambda)); return *this; }
 
 private:
 
@@ -349,9 +349,9 @@ public:
     template<class INIT, class COND, class INCR>
     explicit for_wrapper(INIT lambda_init, COND lambda_cond, INCR lambda_incr)
     {
-        condition.reset(new bool_functor<COND>(lambda_cond));
-        initializer.reset(new next_step_functor<INIT>(lambda_init));
-        increment.reset(new next_step_functor<INCR>(lambda_incr));
+        condition.reset(__pragma(warning(suppress:26409)) new bool_functor<COND>(lambda_cond));
+        initializer.reset(__pragma(warning(suppress:26409)) new next_step_functor<INIT>(lambda_init));
+        increment.reset(__pragma(warning(suppress:26409)) new next_step_functor<INCR>(lambda_incr));
     }
 
     void run()
@@ -373,7 +373,7 @@ public:
     ~for_wrapper() noexcept = default;
 
     template<class T>
-    for_wrapper& set_body(T lambda) { body.reset(new next_step_functor<T>(lambda)); return *this; }
+    for_wrapper& set_body(T lambda) { body.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda)); return *this; }
 private:
     std::unique_ptr<next_step_functor_base> initializer;
     std::unique_ptr<bool_functor_base> condition;
@@ -389,7 +389,7 @@ class while_wrapper final
 public:
     template<class T>
     explicit while_wrapper(T lambda) :body(nullptr), condition(nullptr)
-    {condition.reset(new bool_functor<T>(lambda));}
+    {condition.reset(__pragma(warning(suppress:26409)) new bool_functor<T>(lambda));}
 
     void run()
     {
@@ -410,7 +410,7 @@ public:
     ~while_wrapper() noexcept = default;
 
     template<class T>
-    while_wrapper& set_body(T lambda) { body.reset(new next_step_functor<T>(lambda)); return *this; }
+    while_wrapper& set_body(T lambda) { body.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda)); return *this; }
 
 private:
     std::unique_ptr<next_step_functor_base> body;
@@ -423,7 +423,7 @@ class if_wrapper final
 {
 public:
     template<class T>
-    if_wrapper(T lambda) {condition.reset(new bool_functor<T>(lambda));}
+    if_wrapper(T lambda) {condition.reset(__pragma(warning(suppress:26409)) new bool_functor<T>(lambda));}
 
     void run()
     {
@@ -439,9 +439,9 @@ public:
     ~if_wrapper() noexcept = default;
 
     template<class T>
-    if_wrapper& set_then(T lambda) { thens.reset(new next_step_functor<T>(lambda)); return *this; }
+    if_wrapper& set_then(T lambda) { thens.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda)); return *this; }
     template<class T>
-    if_wrapper& set_else(T lambda) { elses.reset(new next_step_functor<T>(lambda)); return *this; }
+    if_wrapper& set_else(T lambda) { elses.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda)); return *this; }
 
 private:
     std::unique_ptr<bool_functor_base> condition;
@@ -464,7 +464,7 @@ class branch final : public case_instruction
 {
 public:
     template<class T>
-    branch(T lambda) {condition.reset(new any_functor<T>(lambda));}
+    branch(T lambda) {condition.reset(__pragma(warning(suppress:26409)) new any_functor<T>(lambda));}
 
     bool equals(const base_rvholder& rv, CT lv) const
     {
@@ -488,7 +488,7 @@ class body final : public case_instruction
 {
 public:
     template<class T>
-    body(T lambda) {instructions.reset(new next_step_functor<T>(lambda));}
+    body(T lambda) {instructions.reset(__pragma(warning(suppress:26409)) new next_step_functor<T>(lambda));}
 
 
     virtual next_step execute(const base_rvholder&) const override
@@ -791,32 +791,32 @@ DEFINE_EXTRA(2, extra_addition);
             MAX_BOGUS_IMPLEMENTATIONS>::value >::type _JOIN(_ec_,__COUNTER__)(a);\
             return obf::stream_helper();}() << a)
 
-#define FOR(init,cond,inc) { std::shared_ptr<obf::base_rvholder> __rvlocal; obf::for_wrapper( [&](){(init); return __crv; },\
+#define FOR(init,cond,inc) { __pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal; obf::for_wrapper( [&](){(init); return __crv; },\
            [&]()->bool{return (cond); }, \
            [&](){inc;return __crv;}).set_body( [&]() {
 #define ENDFOR return __crv;}).run(); }
 
 #define END return __crv;}).run(); }
 
-#define IF(x) {std::shared_ptr<obf::base_rvholder> __rvlocal; obf::if_wrapper(( [&]()->bool{ return (x); })).set_then( [&]() {
+#define IF(x) {__pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal; obf::if_wrapper(( [&]()->bool{ return (x); })).set_then( [&]() {
 #define ELSE return __crv;}).set_else( [&]() {
 #define ENDIF END
 
-#define WHILE(x) {std::shared_ptr<obf::base_rvholder> __rvlocal; obf::while_wrapper([&]()->bool{ return (x); }).set_body( [&]() {
+#define WHILE(x) {__pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal; obf::while_wrapper([&]()->bool{ return (x); }).set_body( [&]() {
 #define ENDWHILE END
 
 #define BREAK __crv = obf::next_step::ns_break; throw __crv;
 #define CONTINUE __crv = obf::next_step::ns_continue; throw __crv;
 
-#define RETURN(x) __rvlocal.reset(new obf::rvholder<std::remove_reference<decltype(x)>::type>(x,x));  throw __rvlocal;
+#define RETURN(x) __rvlocal.reset(__pragma(warning(suppress:26409)) new obf::rvholder<std::remove_reference<decltype(x)>::type>(x,x)); throw __rvlocal;
 
-#define REPEAT { std::shared_ptr<obf::base_rvholder> __rvlocal; obf::repeat_wrapper().set_body( [&]() {
+#define REPEAT { __pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal; obf::repeat_wrapper().set_body( [&]() {
 #define AS_LONG_AS(x) return __crv;}).set_condition([&]()->bool{ return ( (x) ); }).run(); }
 
-#define OBF_BEGIN try { obf::next_step __crv = obf::next_step::ns_done; std::shared_ptr<obf::base_rvholder> __rvlocal; (void)__crv;
-#define OBF_END } catch(std::shared_ptr<obf::base_rvholder>& r) { return *r; } catch (...) {throw;}
+#define OBF_BEGIN try { obf::next_step __crv = obf::next_step::ns_done; __pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal; (void)__crv;
+#define OBF_END } catch(const std::shared_ptr<obf::base_rvholder>& r) { return *r; } catch (...) {throw;}
 
-#define CASE(a) try { std::shared_ptr<obf::base_rvholder> __rvlocal;\
+#define CASE(a) try { __pragma(warning(suppress:6246)) std::shared_ptr<obf::base_rvholder> __rvlocal;\
                 auto __avholder = a; obf::case_wrapper<std::remove_reference<decltype(a)>::type>(a).
 #define ENDCASE run(); } catch(obf::next_step&) {}
 #define WHEN(c) add_entry(obf::branch<std::remove_reference<decltype(__avholder)>::type>\
